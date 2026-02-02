@@ -1,4 +1,4 @@
-const Board = require('../models/boards');
+const Board = require('../models/board');
 
 async function createBoard(data) {
     const board = await Board.create(data);

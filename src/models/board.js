@@ -1,4 +1,3 @@
-// created basic board model
 const mongoose = require('mongoose');
 const boardSchema = new mongoose.Schema({
     name : String,
