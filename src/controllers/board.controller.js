@@ -8,5 +8,15 @@ const createBoard = async (req, res) => {
     return res.status(201).json(board);
 }
 
-module.exports = { createBoard };
+const deleteBoard = async (req, res) => {
+    await boardService.deleteBoard(req.params.boardId);
+    return res.status(200).json({
+        message : 'Board deleted successfully'
+    });
+}
+
+module.exports = { 
+    createBoard,
+    deleteBoard
+ };
 
