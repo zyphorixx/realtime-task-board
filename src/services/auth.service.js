@@ -14,6 +14,7 @@ async function registerUser({ email, password }){
 
 async function loginUser({ email, password }){
     const user = await User.findOne({ email });
+    console.log('auth service : ', user);
     if(!user){
         throw new Error('Invalid credentials');
     }
