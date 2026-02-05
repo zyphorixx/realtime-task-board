@@ -15,8 +15,54 @@ const deleteBoard = async (req, res) => {
     });
 }
 
+const addMember = async (req, res) => {
+    try {
+        const board = await boardService.addMember({
+            boardId : req.params.boardId,
+            email : req.body.email,
+            role : req.bosy.role
+        });
+        res.status(200).json(board);
+    } 
+    catch (error) {
+        res.status(400).json({ message: err.message });
+    }
+}
+
+async function updateRole(req, res) {
+  try {
+    const board = await boardService.updateMemberRole({
+      boardId: req.params.boardId,
+      userId: req.params.userId,
+      role: req.body.role
+    });
+
+    res.status(200).json(board);
+  } 
+  catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+}
+
+async function removeMember(req, res) {
+  try {
+    const board = await boardService.removeMember({
+      boardId: req.params.boardId,
+      userId: req.params.userId
+    });
+
+    res.status(200).json(board);
+  } 
+  catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+}
+
 module.exports = { 
     createBoard,
-    deleteBoard
+    deleteBoard,
+    addMember,
+    removeMember,
+    updateRole
  };
 
