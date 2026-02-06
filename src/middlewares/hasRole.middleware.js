@@ -5,9 +5,11 @@ function hasRole(allowedRoles = []) {
   // Ye middleware return karta hai ek function
   return async function (req, res, next) {
     try {
+      
+
       const userId = req.user.id; // JWT se aaya hua user
       const boardId = req.params.boardId || req.body.boardId;
-
+      
       // Board exist karta hai ya nahi
       const board = await Board.findById(boardId);
       if (!board) {
@@ -23,6 +25,13 @@ function hasRole(allowedRoles = []) {
         return res.status(403).json({ message: 'You are not a board member' });
       }
 
+      console.log('RBAC CHECK:', {
+        userId,
+        boardId,
+        role: member.role,
+        allowedRoles
+      });
+      
       // Role allowed hai ya nahi
       if (!allowedRoles.includes(member.role)) {
         return res.status(403).json({ message: 'Insufficient permissions' });
