@@ -1,18 +1,29 @@
 const boardService = require('../services/board.service');
 
 const createBoard = async (req, res) => {
+  try {
     const board = await boardService.createBoard({
-        name : req.body.name,
-        ownerId : req.user.id 
+      name: req.body.name,
+      ownerId: req.user.id
     });
-    return res.status(201).json(board);
-}
+
+    res.status(201).json(board);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
 
 const deleteBoard = async (req, res) => {
-    await boardService.deleteBoard(req.params.boardId);
-    return res.status(200).json({
+    try {
+      await boardService.deleteBoard(req.params.boardId);
+      return res.status(200).json({
         message : 'Board deleted successfully'
-    });
+      });
+    } 
+    catch (error) {
+      return res.status(400).json({ message : err.message});
+    }
 }
 
 const addMember = async (req, res) => {
@@ -20,12 +31,12 @@ const addMember = async (req, res) => {
         const board = await boardService.addMember({
             boardId : req.params.boardId,
             email : req.body.email,
-            role : req.bosy.role
+            role : req.body.role
         });
         res.status(200).json(board);
     } 
     catch (error) {
-        res.status(400).json({ message: err.message });
+        res.status(400).json({ message: error.message });
     }
 }
 
