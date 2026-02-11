@@ -1,6 +1,5 @@
 const cardService = require('../services/card.service');
 
-// Card create API
 async function createCard(req, res) {
   try {
     const card = await cardService.createCard({
@@ -17,7 +16,6 @@ async function createCard(req, res) {
   }
 }
 
-// Board ke cards list
 async function getCards(req, res) {
   try {
     const cards = await cardService.getCards(req.params.boardId);
@@ -57,9 +55,25 @@ async function deleteCard(req, res){
   }
 }
 
+async function getCard(req, res){
+  try {
+    const card = await cardService.getCardById(req.params.cardId);
+
+    if(!card){
+      return res.status(404).json({message : "Card not found"});
+    }
+
+    return res.status(200).json(card);
+  } 
+  catch (error) {
+    return res.status(400).json({message : error.message});
+  }
+}
+
 module.exports = {
   createCard,
   getCards,
   updateCard,
-  deleteCard
+  deleteCard,
+  getCard
 };

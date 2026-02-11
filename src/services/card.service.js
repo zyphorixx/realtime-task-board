@@ -17,6 +17,10 @@ async function getCards(boardId) {
   return Card.find({ boardId }).sort({ position: 1 });
 }
 
+async function getCardById(cardId){
+  return Card.findById(cardId);
+}
+
 async function updateCard(boardId, cardId, data){
   const card = await Card.findOneAndUpdate(
     { _id: cardId, boardId },
@@ -48,5 +52,6 @@ module.exports = {
   createCard,
   getCards,
   updateCard,
-  deleteCard
+  deleteCard,
+  getCardById
 };

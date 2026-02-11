@@ -13,7 +13,6 @@ const createBoard = async (req, res) => {
   }
 };
 
-
 const deleteBoard = async (req, res) => {
     try {
       await boardService.deleteBoard(req.params.boardId);
@@ -69,11 +68,53 @@ async function removeMember(req, res) {
   }
 }
 
+async function getBoard(req, res){
+  try {
+    const board = await boardService.getBoardById(req.params.boardId);
+
+    if(!board){
+      return res.status(404).json({message : "Board not found"});
+    }
+    return res.status(200).json(board);
+  } 
+  catch (error) {
+    return res.status(400).json({message : error.message});
+  }
+}
+
+async function updateBoard(req, res){
+  try {
+    const updatedBoard = await boardService.updateBoard(req.params.boardId, req.body);
+    
+    if(!updatedBoard){
+      return res.status(404).json({message : "Board cannot be updated"});
+    }
+
+    return res.status(200).json(updatedBoard);
+  } 
+  catch (error) {
+    return res.status(400).json({message : error.message});
+  }
+}
+
+async function getBoards(req, res){
+  try {
+    const boards = await boardService.getUserBoards(req.user.userId);
+    return res.status(200).json(boards);
+  } 
+  catch (error) {
+    res.status(400).json({message : error.message});
+  }
+}
+
 module.exports = { 
     createBoard,
     deleteBoard,
     addMember,
     removeMember,
-    updateRole
+    updateRole,
+    getBoard,
+    updateBoard,
+    getBoards
  };
 

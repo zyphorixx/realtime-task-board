@@ -81,13 +81,32 @@ async function removeMember({ boardId, userId }){
 
     await board.save();
     return board;
+}
+async function getBoardById(boardId){
+    return await Board.findById(boardId);
+}
 
+async function updateBoard(boardId, data){
+    return await Board.findByIdAndUpdate(
+        boardId,
+        data,
+        {new : true}
+    );
+}
+
+async function getUserBoards(userId){
+    return await Board.find({
+        "members.userId" : userId
+    });
 }
 module.exports = {
     createBoard,
     deleteBoard,
     addMember,
     updateMembeRole,
-    removeMember
+    removeMember,
+    getBoardById,
+    updateBoard,
+    getUserBoards
 }
 
