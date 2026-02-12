@@ -1,7 +1,7 @@
 const activityService = require('../services/activity.service');
 
-async function getBoardActivity(req, res) {
-  try {
+const getBoardActivity = asyncHandler(async (req, res) => {
+
     const { page = 1, limit = 20 } = req.query;
 
     const activity = await activityService.getBoardActivity(
@@ -11,10 +11,6 @@ async function getBoardActivity(req, res) {
     );
 
     res.status(200).json(activity);
-
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}
+});
 
 module.exports = { getBoardActivity };
