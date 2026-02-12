@@ -1,6 +1,8 @@
 const Board = require('../models/board');
+const Activity = require('../models/activity');
+const User = require('../models/user');
 
-async function createBoard({ name, ownerId }) {
+async function createBoard({ name, ownerId}) {
     const board = await Board.create({
         name,
         ownerId,
@@ -11,17 +13,38 @@ async function createBoard({ name, ownerId }) {
             }
         ]
     });
+
+    await Activity.create({
+       boardId: board._id,
+       action: 'BOARD_CREATED',
+       performedBy: ownerId,
+       meta: { name }
+    });
+
     return board;
 }
 
-async function deleteBoard(boardId){
-    const response = await Board.findByIdAndDelete(boardId);
-    return response;
+async function deleteBoard({ boardId, performedBy }){
+
+    const board = await Board.findById(boardId);
+
+    if (!board) throw new Error('Board not found');
+
+    await Board.findByIdAndDelete(boardId);
+
+    await Activity.create({
+       boardId,
+       action: 'BOARD_DELETED',
+       performedBy,
+       meta: { name: board.name }
+    });
+
+    return board;
 }
 
-async function addMember({boardId, email, role}) {
+async function addMember({boardId, email, role, performedBy}) {
     // find user
-    const user = await Board.findOne({email});
+    const user = await User.findOne({email});
     if(!user){
         throw new Error('User not found');
     }
@@ -46,11 +69,21 @@ async function addMember({boardId, email, role}) {
       role
     });
 
+    await Activity.create({
+        boardId,
+        action: 'MEMBER_ADDED',
+        performedBy,
+        meta: {
+           addedUser: user._id,
+           role
+        }
+    });
+
     await board.save();
     return board;
 }
 
-async function updateMembeRole({ boardId, userId, role }){
+async function updateMemberRole({ boardId, userId, role, performedBy}){
     const board = await Board.findById(boardId);
     if(!board){
         throw new Error('Board not found');
@@ -64,14 +97,21 @@ async function updateMembeRole({ boardId, userId, role }){
         throw new Error('Member not found');
     }
 
-    momber.role = role;
+    member.role = role;
     await board.save();
+
+    await Activity.create({
+       boardId,
+       action: 'MEMBER_ROLE_UPDATED',
+       performedBy,
+       meta: { userId, role }
+    });
 
     return board;
 }
 
-async function removeMember({ boardId, userId }){
-    const board = Board.findById(boardId);
+async function removeMember({ boardId, userId, performedBy }){
+    const board = await Board.findById(boardId);
     if(!board){
         throw new Error('Board not found');
     }
@@ -80,18 +120,38 @@ async function removeMember({ boardId, userId }){
     );
 
     await board.save();
+
+    await Activity.create({
+        boardId,
+        action : 'MEMBER_REMOVED',
+        performedBy,
+        meta : { userId }
+    });
+
     return board;
 }
+
 async function getBoardById(boardId){
     return await Board.findById(boardId);
 }
 
-async function updateBoard(boardId, data){
-    return await Board.findByIdAndUpdate(
+async function updateBoard(boardId, data, performedBy){
+    const board = await Board.findByIdAndUpdate(
         boardId,
         data,
         {new : true}
     );
+
+    if (!board) throw new Error('Board not found');
+
+    await Activity.create({
+        boardId,
+        action: 'BOARD_UPDATED',
+        performedBy,
+        meta: data
+    });
+
+    return board;
 }
 
 async function getUserBoards(userId){
@@ -99,14 +159,22 @@ async function getUserBoards(userId){
         "members.userId" : userId
     });
 }
+
+async function getBoardActivity(boardId) {
+  return await Activity.find({ boardId })
+    .sort({ createdAt: -1 })
+    .limit(50);
+}
+
 module.exports = {
     createBoard,
     deleteBoard,
     addMember,
-    updateMembeRole,
+    updateMemberRole,
     removeMember,
     getBoardById,
     updateBoard,
-    getUserBoards
+    getUserBoards,
+    getBoardActivity
 }
 

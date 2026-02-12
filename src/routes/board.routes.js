@@ -3,7 +3,7 @@ const router = express.Router();
 
 const authenticate = require('../middlewares/auth.middleware');
 const hasRole = require('../middlewares/hasRole.middleware');
-const { createBoard, deleteBoard, addMember, updateRole, removeMember, getBoard, updateBoard, getBoards } = require('../controllers/board.controller');
+const { createBoard, deleteBoard, addMember, updateRole, removeMember, getBoard, updateBoard, getBoards, getActivity } = require('../controllers/board.controller');
 
 router.post('/', authenticate, createBoard);
 router.delete('/:boardId', authenticate, hasRole(['OWNER']), deleteBoard);
@@ -14,5 +14,7 @@ router.delete('/:boardId/members/:userId',authenticate,hasRole(['OWNER']), remov
 router.get('/:boardId', authenticate, hasRole(['OWNER', 'EDITOR', 'VIEWER']), getBoard);
 router.get('/', authenticate, getBoards);
 router.patch('/:boardId', authenticate, hasRole(['OWNER']), updateBoard);
+
+router.get('/:boardId/activity', authenticate, hasRole(['OWNER', 'EDITOR', 'VIEWER']), getActivity);
 
 module.exports = router;

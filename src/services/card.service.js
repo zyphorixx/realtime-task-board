@@ -1,4 +1,5 @@
 const Card = require('../models/card');
+const Activity = require('../models/activity');
 
 // Card create
 async function createCard({ boardId, title, description, userId }) {
@@ -9,12 +10,20 @@ async function createCard({ boardId, title, description, userId }) {
     createdBy: userId
   });
 
+  await Activity.create({
+    boardId,
+    action : 'CARD_CREATED',
+    performedBy : userId,  // who triggered
+    meta : { title } // what changed
+  });
+
   return card;
 }
 
 // Board ke saare cards
 async function getCards(boardId) {
   return Card.find({ boardId }).sort({ position: 1 });
+
 }
 
 async function getCardById(cardId){
@@ -32,6 +41,16 @@ async function updateCard(boardId, cardId, data){
     throw new Error('Card not found');
   }
 
+  if(card){
+    await Activity.create({
+      boardId,
+      action : 'CARD_UPDATED',
+      performedBy : userId,
+      meta : { title }
+    });
+  }
+
+
   return card;
 }
 
@@ -43,6 +62,15 @@ async function deleteCard(boardId, cardId){
 
   if(!card){
     throw new Error('Card not found');
+  }
+
+  if(card){
+    await Activity.create({
+      boardId,
+      action : 'CARD_DELETED',
+      performedBy : userId,
+      meta : { title }
+    });
   }
 
   return card;

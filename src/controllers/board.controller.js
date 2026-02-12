@@ -15,7 +15,10 @@ const createBoard = async (req, res) => {
 
 const deleteBoard = async (req, res) => {
     try {
-      await boardService.deleteBoard(req.params.boardId);
+      await boardService.deleteBoard({
+        boardId : req.params.boardId,
+        performedBy: req.user.id
+      });
       return res.status(200).json({
         message : 'Board deleted successfully'
       });
@@ -30,7 +33,8 @@ const addMember = async (req, res) => {
         const board = await boardService.addMember({
             boardId : req.params.boardId,
             email : req.body.email,
-            role : req.body.role
+            role : req.body.role,
+            performedBy: req.user.id
         });
         res.status(200).json(board);
     } 
@@ -44,7 +48,8 @@ async function updateRole(req, res) {
     const board = await boardService.updateMemberRole({
       boardId: req.params.boardId,
       userId: req.params.userId,
-      role: req.body.role
+      role: req.body.role,
+      performedBy: req.user.id
     });
 
     res.status(200).json(board);
@@ -58,7 +63,8 @@ async function removeMember(req, res) {
   try {
     const board = await boardService.removeMember({
       boardId: req.params.boardId,
-      userId: req.params.userId
+      userId: req.params.userId,
+      performedBy: req.user.id
     });
 
     res.status(200).json(board);
@@ -84,7 +90,11 @@ async function getBoard(req, res){
 
 async function updateBoard(req, res){
   try {
-    const updatedBoard = await boardService.updateBoard(req.params.boardId, req.body);
+    const updatedBoard = await boardService.updateBoard(
+      req.params.boardId,
+      req.body,
+      req.user.id
+    );
     
     if(!updatedBoard){
       return res.status(404).json({message : "Board cannot be updated"});
@@ -107,6 +117,17 @@ async function getBoards(req, res){
   }
 }
 
+async function getActivity(req, res) {
+  try {
+    const activity = await boardService.getBoardActivity(
+      req.params.boardId
+    );
+    res.status(200).json(activity);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+}
+
 module.exports = { 
     createBoard,
     deleteBoard,
@@ -115,6 +136,9 @@ module.exports = {
     updateRole,
     getBoard,
     updateBoard,
-    getBoards
+    getBoards,
+    getActivity
  };
 
+
+ 
