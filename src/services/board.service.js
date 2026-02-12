@@ -160,12 +160,6 @@ async function getUserBoards(userId){
     });
 }
 
-async function getBoardActivity(boardId) {
-  return await Activity.find({ boardId })
-    .sort({ createdAt: -1 })
-    .limit(50);
-}
-
 module.exports = {
     createBoard,
     deleteBoard,
@@ -174,7 +168,6 @@ module.exports = {
     removeMember,
     getBoardById,
     updateBoard,
-    getUserBoards,
-    getBoardActivity
+    getUserBoards
 }
 

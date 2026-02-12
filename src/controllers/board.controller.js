@@ -117,17 +117,6 @@ async function getBoards(req, res){
   }
 }
 
-async function getActivity(req, res) {
-  try {
-    const activity = await boardService.getBoardActivity(
-      req.params.boardId
-    );
-    res.status(200).json(activity);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}
-
 module.exports = { 
     createBoard,
     deleteBoard,
@@ -136,9 +125,7 @@ module.exports = {
     updateRole,
     getBoard,
     updateBoard,
-    getBoards,
-    getActivity
+    getBoards
  };
 
 
- 
