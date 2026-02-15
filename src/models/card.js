@@ -34,4 +34,13 @@ const cardSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+// board ke cards fast fetch honge
+cardSchema.index({ boardId: 1 });
+
+// ordering fast hogi
+cardSchema.index({ position: 1 });
+
+// status filter fast hoga (future feature)
+cardSchema.index({ status: 1 });
+
 module.exports = mongoose.model('Card', cardSchema);

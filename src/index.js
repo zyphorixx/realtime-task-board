@@ -19,6 +19,9 @@ app.use('/boards', boardRoutes);
 app.use('/auth', authRoutes);
 app.use('/boards', cardRoutes);
 
+app.use(express.json({ limit: '10kb' })); // prevent large payload abuse
+app.use(require('cors')()); // basic CORS
+
 app.use(errorHandler);
 
 app.get('/health', (req, res) => {
