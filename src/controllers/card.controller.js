@@ -15,7 +15,10 @@ const createCard = asyncHandler(async (req, res) => {
 
 const getCards = asyncHandler(async (req, res) => {
 
-  const cards = await cardService.getCards(req.params.boardId);
+  const cards = await cardService.getCards(
+    req.params.boardId,
+    req.query
+  );
   res.status(200).json(cards);
 });
 

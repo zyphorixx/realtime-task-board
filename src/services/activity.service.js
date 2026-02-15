@@ -4,7 +4,7 @@ async function getBoardActivity(boardId, limit = 20, page = 1) {
   const skip = (page - 1) * limit;
 
   return Activity.find({ boardId })
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1 }) // newest activity first
     .skip(skip)
     .limit(limit);
 }

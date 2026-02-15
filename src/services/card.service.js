@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const Activity = require('../models/activity');
+const getPagination = require('../utils/pagination');
 
 // Card create
 async function createCard({ boardId, title, description, userId }) {
@@ -22,8 +23,13 @@ async function createCard({ boardId, title, description, userId }) {
 
 // Board ke saare cards
 async function getCards(boardId) {
-  return Card.find({ boardId }).sort({ position: 1 });
 
+  const getPagination = require('../utils/pagination');
+
+  return Card.find({ boardId })
+  .limit(limit) // limit apply
+  .skip(skip)  // skip apply
+  .sort({ position: 1 }); // position ke hisab se order
 }
 
 async function getCardById(cardId){

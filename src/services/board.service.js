@@ -155,9 +155,17 @@ async function updateBoard(boardId, data, performedBy){
 }
 
 async function getUserBoards(userId){
+
+    // pagination values nikal lo
+    const { limit, skip } = getPagination(query);
+
+
     return await Board.find({
         "members.userId" : userId
-    });
+    })
+    .limit(limit) // how many records to return
+    .skip(skip) // how many to skip
+    .sort({createdAt : -1}); // newest boards first
 }
 
 module.exports = {

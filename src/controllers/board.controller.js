@@ -88,10 +88,12 @@ const updateBoard = asyncHandler(async (req, res) => {
 
 const getBoards = asyncHandler(async (req, res) => {
 
-  const boards = await boardService.getUserBoards(req.user.id);
+  const boards = await boardService.getUserBoards(
+    req.user.id,
+    req.query
+  );
   res.status(200).json(boards);
 });
-
 
 module.exports = {
   createBoard,
