@@ -1,3 +1,4 @@
+const board = require('../models/board');
 const boardService = require('../services/board.service');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -7,7 +8,8 @@ const createBoard = asyncHandler(async (req, res) => {
     name: req.body.name,
     ownerId: req.user.id
   });
-
+  const io = req.app.get("io");
+  io.to(req.params.boardId).emit("board:created", board);
   res.status(201).json(board);
 });
 
@@ -17,7 +19,10 @@ const deleteBoard = asyncHandler(async (req, res) => {
     boardId: req.params.boardId,
     performedBy: req.user.id
   });
-
+  const io = req.app.get("io");
+  io.to(req.params.boardId).emit("board:deleted", {
+    boardId : req.params.boardId
+  });
   res.status(200).json({
     message: 'Board deleted successfully'
   });
@@ -31,7 +36,11 @@ const addMember = asyncHandler(async (req, res) => {
     role: req.body.role,
     performedBy: req.user.id
   });
-
+  const io = req.app.get("io");
+  io.to(req.params.boardId).emit("member:added", {
+    email : req.body.email,
+    role : req.body.role
+  });
   res.status(200).json(board);
 });
 
@@ -82,7 +91,8 @@ const updateBoard = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Board not found');
   }
-
+  const io = req.app.get("io");
+  io.to(req.params.boardId).emit("board:updated", updatedBoard);
   res.status(200).json(updatedBoard);
 });
 

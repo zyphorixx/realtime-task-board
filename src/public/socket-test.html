@@ -15,6 +15,12 @@
     socket.emit("joinBoard", "123");
   });
 </script>
-
+<script>
+socket.on("card:created", data => console.log("NEW CARD", data));
+socket.on("card:updated", data => console.log("UPDATED", data));
+socket.on("card:deleted", data => console.log("DELETED", data));
+socket.on("member:added", data => console.log("MEMBER", data));
+socket.on("board:updated", data => console.log("BOARD", data));
+</script>
 </body>
 </html>
