@@ -6,6 +6,9 @@ const { Server } = require("socket.io");
 const { PORT } = require('./config/serverConfig');
 const connectDB = require('./config/db');
 
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("redis");
+
 const boardRoutes = require('./routes/board.routes');
 const authRoutes = require('./routes/auth.routes');
 const cardRoutes = require('./routes/card.routes');
@@ -43,6 +46,14 @@ app.set("io", io);
 
 //connection listener
 const boardSocket = require('./sockets/board.socket');
+
+const pubClient = createClient({ url: "redis://127.0.0.1:6379" });
+const subClient = pubClient.duplicate();
+
+await pubClient.connect();
+await subClient.connect();
+
+io.adapter(createAdapter(pubClient, subClient));
 
 io.on("connection", (socket) => {
 
