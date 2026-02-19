@@ -14,11 +14,13 @@ const authRoutes = require('./routes/auth.routes');
 const cardRoutes = require('./routes/card.routes');
 
 const errorHandler = require('./middlewares/errorHandler');
+const { apiLimiter } = require('./middlewares/rateLimiter');
 
 const app = express();
 app.use(express.static(__dirname + '/public'));
 app.use(express.json({ limit: '10kb' })); // prevent large payload abuse
 app.use(require('cors')()); // basic CORS
+app.use(apiLimiter);
 
 connectDB();
 
