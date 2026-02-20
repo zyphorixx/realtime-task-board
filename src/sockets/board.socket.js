@@ -1,65 +1,54 @@
-const { boardUsers } = require("./state");
+const { boardUsers, userSockets } = require("./state");
 
 module.exports = (io, socket) => {
 
-  // join board
-  socket.on("joinBoard", ({ boardId, userId }) => {
+  // join board room
+  socket.on("joinBoard", (boardId) => {
 
     socket.join(boardId);
 
+    const userId = socket.user?.userId || socket.id;
+
+    // board mapping create if not exist
     if (!boardUsers[boardId])
       boardUsers[boardId] = new Map();
 
     boardUsers[boardId].set(socket.id, userId);
 
-    // send updated presence list
-    io.to(boardId).emit("presence:update",
-      Array.from(boardUsers[boardId].values())
-    );
+    // user socket tracking
+    if (!userSockets[userId])
+      userSockets[userId] = new Set();
+
+    userSockets[userId].add(socket.id);
 
     console.log(`User ${userId} joined board ${boardId}`);
+
+    // broadcast presence
+    io.to(boardId).emit("presence:update", {
+      boardId,
+      users: [...new Set(boardUsers[boardId].values())]
+    });
   });
 
-
-  // typing indicator
-  socket.on("typing", ({ boardId, user }) => {
-    socket.to(boardId).emit("typing", user);
-  });
-
-
-  // leaving board
-  socket.on("leaveBoard", (boardId) => {
-
-    socket.leave(boardId);
-
-    if (boardUsers[boardId]) {
-      boardUsers[boardId].delete(socket.id);
-
-      io.to(boardId).emit(
-        "presence:update",
-        Array.from(boardUsers[boardId].values())
-      );
-    }
-  });
-
-
-  // disconnect cleanup
+  // disconnect
   socket.on("disconnect", () => {
 
+    const userId = socket.user?.userId;
+
     for (const boardId in boardUsers) {
+      boardUsers[boardId].delete(socket.id);
 
-      if (boardUsers[boardId].has(socket.id)) {
-
-        boardUsers[boardId].delete(socket.id);
-
-        io.to(boardId).emit(
-          "presence:update",
-          Array.from(boardUsers[boardId].values())
-        );
-      }
+      if (boardUsers[boardId].size === 0)
+        delete boardUsers[boardId];
     }
 
-    console.log("Socket disconnected:", socket.id);
-  });
+    if (userSockets[userId]) {
+      userSockets[userId].delete(socket.id);
 
+      if (userSockets[userId].size === 0)
+        delete userSockets[userId];
+    }
+
+    console.log("Disconnected:", socket.id);
+  });
 };

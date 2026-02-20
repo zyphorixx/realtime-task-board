@@ -1,24 +1,41 @@
 require('dotenv').config();
+
 const express = require('express');
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
+const { apiLimiter } = require('./middlewares/rateLimiter');
+
 const { createAdapter } = require("@socket.io/redis-adapter");
 const { createClient } = require("redis");
 const jwt = require("jsonwebtoken");
 
+/* ---------- ROUTES IMPORT ---------- */
+const boardRoutes = require('./routes/board.routes');
+const authRoutes = require('./routes/auth.routes');
+const cardRoutes = require('./routes/card.routes');
+
+/* ---------- SOCKET HANDLER ---------- */
+const boardSocket = require('./sockets/board.socket');
+
 const app = express();
+
+/* ---------- CONFIG ---------- */
+const PORT = process.env.PORT || 3000;
 
 /* ---------- security ---------- */
 app.use(express.json({ limit:'10kb' }));
 app.use(cors({ origin:["http://localhost:5173"], credentials:true }));
 app.use(apiLimiter);
 
+const path = require("path");
+app.use(express.static(path.join(__dirname, "public")));
+
 /* ---------- routes ---------- */
 app.use('/boards', boardRoutes);
 app.use('/auth', authRoutes);
-app.use('/boards', cardRoutes);
+app.use('/cards', cardRoutes);
 
 /* ---------- server ---------- */
 const server = http.createServer(app);
@@ -26,6 +43,8 @@ const server = http.createServer(app);
 const io = new Server(server,{
   cors:{ origin:"http://localhost:5173" }
 });
+
+global.io = io; // Make io globally accessible
 
 app.set("io", io);
 
@@ -40,23 +59,35 @@ async function initRedis(){
 initRedis();
 
 /* ---------- auth middleware ---------- */
-io.use((socket,next)=>{
-  try{
+io.use((socket, next) => {
+  try {
     const token = socket.handshake.auth.token;
+
+    if (!token)
+      return next(new Error("No token provided"));
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded;
+
+    socket.user = decoded; // attach real user
     next();
-  }catch{
+
+  } catch (err) {
     next(new Error("Unauthorized"));
   }
 });
 
 /* ---------- socket events ---------- */
 io.on("connection", socket=>{
+  console.log("Socket connected:", socket.id);
+
   boardSocket(io,socket);
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
 });
 
 /* ---------- start ---------- */
 server.listen(PORT,()=>{
-  console.log("Server running");
+  console.log(`Server running on port ${PORT}`);
 });

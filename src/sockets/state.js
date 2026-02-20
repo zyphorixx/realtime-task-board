@@ -1,15 +1,11 @@
-// global socket state store
+// boardId → Map(socketId → userId)
+const boardUsers = {};
 
-const boardUsers = new Map();
+// userId → Set(socketIds)
+// ek user multiple tabs open kare toh track rahe
+const userSockets = {};
 
-/*
-Structure:
-
-Map {
-   boardId => Map {
-        socketId => userId
-   }
-}
-*/
-
-module.exports = { boardUsers };
+module.exports = {
+  boardUsers,
+  userSockets
+};

@@ -3,7 +3,6 @@ const Activity = require('../models/activity');
 const getPagination = require('../utils/pagination');
 const redis = require('../config/redis'); // adjust path if needed
 
-
 async function createCard({ boardId, title, description, userId }) {
   const card = await Card.create({
     boardId,
@@ -20,6 +19,8 @@ async function createCard({ boardId, title, description, userId }) {
     performedBy: userId,
     meta: { title }
   });
+
+  global.io.to(boardId).emit("card:created", card);
 
   return card;
 }
@@ -64,6 +65,7 @@ async function updateCard(boardId, cardId, data, userId) {
     meta: { updatedFields: Object.keys(data) }
   });
 
+  globol.io.to(boardId).emit("card:updated", card);
   return card;
 }
 

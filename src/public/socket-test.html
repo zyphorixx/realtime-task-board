@@ -7,22 +7,51 @@
 </head>
 <body>
 
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<h2 id="status">Connecting...</h2>
+
+<script src="/socket.io/socket.io.js"></script>
 
 <script>
-  const socket = io("http://localhost:3000");
+const socket = io("http://localhost:3000");
 
-  socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-    socket.emit("joinBoard", "123");
-  });
+socket.on("presence:update", data => {
+  console.log("Active users:", data.users);
+});
+
+/* ---------- CONNECT ---------- */
+socket.on("connect", () => {
+  console.log("CONNECTED:", socket.id);
+  document.getElementById("status").innerText = "Connected ✅";
+
+  socket.emit("joinBoard", "test-board");
+});
+
+/* ---------- EVENTS ---------- */
+socket.on("card:created", data =>
+  console.log("NEW CARD", data)
+);
+
+socket.on("card:updated", data =>
+  console.log("UPDATED CARD", data)
+);
+
+socket.on("card:deleted", data =>
+  console.log("DELETED CARD", data)
+);
+
+socket.on("member:added", data =>
+  console.log("MEMBER ADDED", data)
+);
+
+socket.on("board:updated", data =>
+  console.log("BOARD UPDATED", data)
+);
+
+/* ---------- DISCONNECT ---------- */
+socket.on("disconnect", () => {
+  console.log("Disconnected");
+});
 </script>
-<script>
-socket.on("card:created", data => console.log("NEW CARD", data));
-socket.on("card:updated", data => console.log("UPDATED", data));
-socket.on("card:deleted", data => console.log("DELETED", data));
-socket.on("member:added", data => console.log("MEMBER", data));
-socket.on("board:updated", data => console.log("BOARD", data));
-</script>
+
 </body>
 </html>
