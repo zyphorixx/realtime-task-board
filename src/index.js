@@ -4,6 +4,7 @@ const express = require('express');
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const connectDB = require("./config/db");
 
 const { apiLimiter } = require('./middlewares/rateLimiter');
 
@@ -15,11 +16,12 @@ const jwt = require("jsonwebtoken");
 const boardRoutes = require('./routes/board.routes');
 const authRoutes = require('./routes/auth.routes');
 const cardRoutes = require('./routes/card.routes');
+const activityRoutes = require('./routes/activity.routes');
 
 /* ---------- SOCKET HANDLER ---------- */
 const boardSocket = require('./sockets/board.socket');
 
-const app = express();
+const app = require("./app");
 
 /* ---------- CONFIG ---------- */
 const PORT = process.env.PORT || 3000;
@@ -35,8 +37,8 @@ app.use(express.static(path.join(__dirname, "public")));
 /* ---------- routes ---------- */
 app.use('/boards', boardRoutes);
 app.use('/auth', authRoutes);
-app.use('/cards', cardRoutes);
-
+app.use("/boards", cardRoutes);
+app.use('/boards', activityRoutes);
 /* ---------- server ---------- */
 const server = http.createServer(app);
 
@@ -57,6 +59,13 @@ async function initRedis(){
   io.adapter(createAdapter(pubClient, subClient));
 }
 initRedis();
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    app: 'TaskBoard'
+  });
+});
 
 /* ---------- auth middleware ---------- */
 io.use((socket, next) => {
@@ -88,6 +97,11 @@ io.on("connection", socket=>{
 });
 
 /* ---------- start ---------- */
-server.listen(PORT,()=>{
-  console.log(`Server running on port ${PORT}`);
-});
+(async () => {
+  await connectDB();
+
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
+})();

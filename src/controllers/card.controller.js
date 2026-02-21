@@ -17,23 +17,25 @@ const createCard = asyncHandler(async (req, res) => {
 
 const getCards = asyncHandler(async (req, res) => {
 
-  const cards = await cardService.getCards(
-    req.params.boardId,
-    req.query
-  );
+  const { boardId } = req.params;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+
+  const cards = await cardService.getCards(boardId, page, limit);
+
   res.status(200).json(cards);
 });
 
 const updateCard = asyncHandler(async (req, res) => {
 
-  const updatedCard = await cardService.updateCard({
-    boardId: req.params.boardId,
-    cardId: req.params.cardId,
-    data: req.body,
-    userId: req.user.id   // performer for activity log
-  });
+  const updatedCard = await cardService.updateCard(
+    req.params.boardId,
+    req.params.cardId,
+    req.body,
+    req.user.id
+  );
   const io = req.app.get("io");
-  io.to(req.params.boardId).emit("card:updated", updateCard);
+  io.to(req.params.boardId).emit("card:updated", updatedCard);
   res.status(200).json(updatedCard);
 });
 

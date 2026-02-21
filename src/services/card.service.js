@@ -1,23 +1,29 @@
 const Card = require('../models/card');
 const Activity = require('../models/activity');
 const getPagination = require('../utils/pagination');
-const redis = require('../config/redis'); // adjust path if needed
+const redis = require('../config/redis');
+
+async function clearBoardCache(boardId){
+  const keys = await redis.keys(`board:${boardId}:cards:*`);
+  if(keys.length) await redis.del(...keys);
+}
 
 async function createCard({ boardId, title, description, userId }) {
+
   const card = await Card.create({
     boardId,
     title,
     description,
-    createdBy: userId
+    createdBy:userId
   });
 
-  await redis.del(`board:${boardId}:cards`);
+  await clearBoardCache(boardId);
 
   await Activity.create({
     boardId,
-    action: 'CARD_CREATED',
-    performedBy: userId,
-    meta: { title }
+    action:'CARD_CREATED',
+    performedBy:userId,
+    meta:{ title }
   });
 
   global.io.to(boardId).emit("card:created", card);
@@ -26,6 +32,9 @@ async function createCard({ boardId, title, description, userId }) {
 }
 
 async function getCards(boardId, page = 1, limit = 10) {
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
+
   const key = `board:${boardId}:cards:${page}:${limit}`;
 
   const cached = await redis.get(key);
@@ -43,48 +52,53 @@ async function getCards(boardId, page = 1, limit = 10) {
   return cards;
 }
 
-async function getCardById(cardId) {
+async function getCardById(cardId){
   return Card.findById(cardId);
 }
 
-async function updateCard(boardId, cardId, data, userId) {
+async function updateCard(boardId,cardId,data,userId){
+
   const card = await Card.findOneAndUpdate(
-    { _id: cardId, boardId },
-    { $set: data },
-    { new: true }
+    { _id:cardId, boardId },
+    { $set:data },
+    { new:true }
   );
 
-  if (!card) throw new Error('Card not found');
+  if(!card) throw new Error("Card not found");
 
-  await redis.del(`board:${boardId}:cards`);
+  await clearBoardCache(boardId);
 
   await Activity.create({
     boardId,
-    action: 'CARD_UPDATED',
-    performedBy: userId,
-    meta: { updatedFields: Object.keys(data) }
+    action:"CARD_UPDATED",
+    performedBy:userId,
+    meta:{ updatedFields:Object.keys(data) }
   });
 
-  globol.io.to(boardId).emit("card:updated", card);
+  global.io.to(boardId).emit("card:updated", card);
+
   return card;
 }
 
-async function deleteCard(boardId, cardId, userId) {
+async function deleteCard({ boardId, cardId, userId }) {
+
   const card = await Card.findOneAndDelete({
     _id: cardId,
     boardId
   });
 
-  if (!card) throw new Error('Card not found');
+  if (!card) throw new Error("Card not found");
 
-  await redis.del(`board:${boardId}:cards`);
+  await clearBoardCache(boardId);
 
   await Activity.create({
     boardId,
-    action: 'CARD_DELETED',
+    action: "CARD_DELETED",
     performedBy: userId,
     meta: { title: card.title }
   });
+
+  global.io.to(boardId).emit("card:deleted", { cardId, boardId });
 
   return card;
 }

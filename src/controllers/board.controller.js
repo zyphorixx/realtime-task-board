@@ -1,4 +1,3 @@
-const board = require('../models/board');
 const boardService = require('../services/board.service');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -9,7 +8,7 @@ const createBoard = asyncHandler(async (req, res) => {
     ownerId: req.user.id
   });
   const io = req.app.get("io");
-  io.to(req.params.boardId).emit("board:created", board);
+  io.to(board._id.toString()).emit("board:created", board);
   res.status(201).json(board);
 });
 
@@ -100,7 +99,8 @@ const getBoards = asyncHandler(async (req, res) => {
 
   const boards = await boardService.getUserBoards(
     req.user.id,
-    req.query
+    req.query.page,
+    req.query.limit
   );
   res.status(200).json(boards);
 });

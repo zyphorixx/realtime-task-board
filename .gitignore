@@ -1,4 +1,6 @@
 node_modules/
 .env/
-.hintrc
+.hintrc/
+.env.test
+
 

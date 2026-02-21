@@ -1,16 +1,16 @@
 const activityService = require('../services/activity.service');
+const asyncHandler = require('../utils/asyncHandler');
 
 const getBoardActivity = asyncHandler(async (req, res) => {
 
-    const { page = 1, limit = 20 } = req.query;
-
-    const activity = await activityService.getBoardActivity(
+    const activities = await activityService.getBoardActivity(
       req.params.boardId,
-      Number(limit),
-      Number(page)
+      req.query.page,
+      req.query.limit,
+      req.query.performedBy
     );
 
-    res.status(200).json(activity);
+    res.status(200).json(activities);
 });
 
 module.exports = { getBoardActivity };
