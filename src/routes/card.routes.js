@@ -9,7 +9,7 @@ const { createCard, getCards, updateCard, deleteCard, getCard } = require('../co
 const { createCardSchema } = require('../validators/card.validator');
 
 // Create card → OWNER + EDITOR
-router.post('/:boardId/cards',authenticate, hasRole(['OWNER', 'EDITOR']), validate(createCardSchema), createCard);
+router.post('/:boardId/cards' ,authenticate, hasRole(['OWNER', 'EDITOR']), validate(createCardSchema), createCard);
 
 // Get cards → OWNER + EDITOR + VIEWER
 router.get('/:boardId/cards',authenticate, hasRole(['OWNER', 'EDITOR', 'VIEWER']),getCards);

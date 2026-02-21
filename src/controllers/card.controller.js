@@ -7,11 +7,12 @@ const createCard = asyncHandler(async (req, res) => {
     boardId: req.params.boardId,
     title: req.body.title,
     description: req.body.description,
-    userId: req.user.id   // performer
+    userId: req.user.id
   });
-  // socket emit
+
   const io = req.app.get("io");
   io.to(req.params.boardId).emit("card:created", card);
+
   res.status(201).json(card);
 });
 
@@ -34,8 +35,10 @@ const updateCard = asyncHandler(async (req, res) => {
     req.body,
     req.user.id
   );
+
   const io = req.app.get("io");
   io.to(req.params.boardId).emit("card:updated", updatedCard);
+
   res.status(200).json(updatedCard);
 });
 
@@ -44,12 +47,14 @@ const deleteCard = asyncHandler(async (req, res) => {
   await cardService.deleteCard({
     boardId: req.params.boardId,
     cardId: req.params.cardId,
-    userId: req.user.id   // performer
+    userId: req.user.id
   });
+
   const io = req.app.get("io");
   io.to(req.params.boardId).emit("card:deleted", {
     cardId : req.params.cardId
   });
+
   res.status(200).json({
     message: 'Card deleted successfully'
   });

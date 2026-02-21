@@ -37,7 +37,7 @@ app.use(express.static(path.join(__dirname, "public")));
 /* ---------- routes ---------- */
 app.use('/boards', boardRoutes);
 app.use('/auth', authRoutes);
-app.use("/boards", cardRoutes);
+app.use("/api/boards", cardRoutes);
 app.use('/boards', activityRoutes);
 /* ---------- server ---------- */
 const server = http.createServer(app);

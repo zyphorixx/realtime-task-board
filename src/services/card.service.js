@@ -9,7 +9,7 @@ async function clearBoardCache(boardId){
 }
 
 async function createCard({ boardId, title, description, userId }) {
-
+  console.log("CREATE CARD INPUT:", boardId, userId);
   const card = await Card.create({
     boardId,
     title,

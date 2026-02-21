@@ -1,12 +1,10 @@
 const Board = require('../models/board');
 
 function hasRole(allowedRoles = []) {
-
+  
   // Ye middleware return karta hai ek function
   return async function (req, res, next) {
     try {
-      
-
       const userId = req.user.id; // JWT se aaya hua user
       const boardId = req.params.boardId || req.body.boardId;
       
@@ -18,7 +16,7 @@ function hasRole(allowedRoles = []) {
 
       // Check karo user board ka member hai ya nahi
       const member = board.members.find(
-        m => m.userId.toString() === userId
+        m => m.userId.equals(req.user.id)
       );
 
       if (!member) {
@@ -50,3 +48,4 @@ function hasRole(allowedRoles = []) {
 }
 
 module.exports = hasRole;
+

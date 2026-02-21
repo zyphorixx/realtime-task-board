@@ -1,5 +1,6 @@
 const User = require('../models/user');
-const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/serverConfig');
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 const jwt = require('jsonwebtoken');
 
 async function registerUser({ email, password }){
@@ -14,7 +15,7 @@ async function registerUser({ email, password }){
 
 async function loginUser({ email, password }){
     const user = await User.findOne({ email });
-    console.log('auth service : ', user);
+
     if(!user){
         throw new Error('Invalid credentials');
     }
@@ -25,7 +26,9 @@ async function loginUser({ email, password }){
     }
 
     const token = jwt.sign(
-        {userId : user._id},
+        {
+            userId : user._id
+        },
         JWT_SECRET,
         {expiresIn : JWT_EXPIRES_IN}
     );

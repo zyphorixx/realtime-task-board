@@ -6,6 +6,7 @@ const getPagination = require('../utils/pagination');
 
 
 async function createBoard({ name, ownerId }) {
+
   const board = await Board.create({
     name,
     ownerId,

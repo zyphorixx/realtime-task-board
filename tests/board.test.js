@@ -7,16 +7,18 @@ jest.setTimeout(20000);
 
 beforeAll(async () => {
 
-  await request(app).post("/auth/register").send({ 
-    email:"b@test.com",
-    password:"123456"
- });
+  await request(app)
+    .post("/auth/register")
+    .send({
+      email:"b@test.com",
+      password:"123456"
+    });
 
   const res = await request(app)
     .post("/auth/login")
     .send({
-        email:"b@test.com",
-        password:"123456"
+      email:"b@test.com",
+      password:"123456"
     });
 
   token = res.body.data.token;
@@ -32,4 +34,5 @@ describe("Board API", () => {
 
     expect(res.statusCode).toBe(201);
   });
+
 });

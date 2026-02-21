@@ -7,9 +7,17 @@ const createBoard = asyncHandler(async (req, res) => {
     name: req.body.name,
     ownerId: req.user.id
   });
+
   const io = req.app.get("io");
-  io.to(board._id.toString()).emit("board:created", board);
-  res.status(201).json(board);
+
+  if (io) {
+    io.to(board._id.toString()).emit("board:created", board);
+  }
+
+  res.status(201).json({
+    success: true,
+    data: board
+  });
 });
 
 const deleteBoard = asyncHandler(async (req, res) => {

@@ -17,7 +17,7 @@ describe("Auth API", () => {
   });
 
   test("login user", async () => {
-    const email = `login${Date.now()}@mail.com`;
+    const email = await `login${Date.now()}@mail.com`;
 
     await request(app).post("/auth/register").send({
       email,
