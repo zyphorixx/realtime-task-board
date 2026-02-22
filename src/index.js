@@ -52,11 +52,18 @@ app.set("io", io);
 
 /* ---------- redis adapter ---------- */
 async function initRedis(){
-  const pubClient = createClient({ url:"redis://127.0.0.1:6379" });
+  const pubClient = createClient({
+    url: process.env.REDIS_URL
+  });
+
   const subClient = pubClient.duplicate();
+
   await pubClient.connect();
   await subClient.connect();
+
   io.adapter(createAdapter(pubClient, subClient));
+
+  console.log("Redis Adapter Connected");
 }
 initRedis();
 
