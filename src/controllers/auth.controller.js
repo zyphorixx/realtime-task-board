@@ -2,13 +2,10 @@ const authService = require('../services/auth.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const register = asyncHandler(async (req, res) => {
-    const user = await authService.registerUser(req.body);
+    const response = await authService.registerUser(req.body);
     return res.status(201).json({
         success : true,
-        data : {
-            id : user._id,
-            email : user.email
-         }
+        data : response
     });
 });
 

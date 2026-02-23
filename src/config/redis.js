@@ -1,4 +1,5 @@
 const Redis = require("ioredis");
+const logger = require("../utils/logger");
 
 let redis;
 
@@ -9,21 +10,37 @@ if (process.env.NODE_ENV !== "test") {
   );
 
   redis.on("connect", () =>
-    console.log("Redis connected")
+    logger.info("Redis connected")
   );
 
   redis.on("error", err =>
-    console.error("Redis error:", err)
+    logger.error("Redis error:", err.message)
+  );
+
+  redis.on("reconnecting", () =>
+    logger.warn("Redis reconnecting...")
+  );
+
+  redis.on("ready", () =>
+    logger.info("Redis ready")
   );
 
 } else {
 
-  // fake redis for tests
+  // Mock redis for tests
   redis = {
     get: async () => null,
     set: async () => null,
     del: async () => null,
-    quit: async () => null
+    quit: async () => null,
+    keys: async () => [],
+    duplicate: () => ({
+      get: async () => null,
+      set: async () => null,
+      del: async () => null,
+      quit: async () => null,
+      keys: async () => []
+    })
   };
 
 }

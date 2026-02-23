@@ -25,13 +25,13 @@ const boardSchema = new mongoose.Schema({
     ]
 }, {timestamps : true });
 
-// user membership lookup fast karega
+// Index for fast user membership lookup
 boardSchema.index({ "members.userId": 1 });
 
-// owner boards fast fetch honge
+// Index for fast owner boards fetch
 boardSchema.index({ ownerId: 1 });
 
-// latest boards fast sorting ke liye
+// Index for sorting by latest boards
 boardSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Board', boardSchema);

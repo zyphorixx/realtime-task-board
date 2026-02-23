@@ -2,7 +2,6 @@ const cardService = require('../services/card.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const createCard = asyncHandler(async (req, res) => {
-
   const card = await cardService.createCard({
     boardId: req.params.boardId,
     title: req.body.title,
@@ -11,24 +10,31 @@ const createCard = asyncHandler(async (req, res) => {
   });
 
   const io = req.app.get("io");
-  io.to(req.params.boardId).emit("card:created", card);
+  
+  if (io) {
+    io.to(req.params.boardId).emit("card:created", card);
+  }
 
-  res.status(201).json(card);
+  res.status(201).json({
+    success: true,
+    data: card
+  });
 });
 
 const getCards = asyncHandler(async (req, res) => {
-
   const { boardId } = req.params;
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
 
   const cards = await cardService.getCards(boardId, page, limit);
 
-  res.status(200).json(cards);
+  res.status(200).json({
+    success: true,
+    data: cards
+  });
 });
 
 const updateCard = asyncHandler(async (req, res) => {
-
   const updatedCard = await cardService.updateCard(
     req.params.boardId,
     req.params.cardId,
@@ -37,13 +43,18 @@ const updateCard = asyncHandler(async (req, res) => {
   );
 
   const io = req.app.get("io");
-  io.to(req.params.boardId).emit("card:updated", updatedCard);
+  
+  if (io) {
+    io.to(req.params.boardId).emit("card:updated", updatedCard);
+  }
 
-  res.status(200).json(updatedCard);
+  res.status(200).json({
+    success: true,
+    data: updatedCard
+  });
 });
 
 const deleteCard = asyncHandler(async (req, res) => {
-
   await cardService.deleteCard({
     boardId: req.params.boardId,
     cardId: req.params.cardId,
@@ -51,24 +62,26 @@ const deleteCard = asyncHandler(async (req, res) => {
   });
 
   const io = req.app.get("io");
-  io.to(req.params.boardId).emit("card:deleted", {
-    cardId : req.params.cardId
-  });
+  
+  if (io) {
+    io.to(req.params.boardId).emit("card:deleted", {
+      cardId: req.params.cardId
+    });
+  }
 
   res.status(200).json({
+    success: true,
     message: 'Card deleted successfully'
   });
 });
 
 const getCard = asyncHandler(async (req, res) => {
-
   const card = await cardService.getCardById(req.params.cardId);
 
-  if (!card) {
-    return res.status(404).json({ message: "Card not found" });
-  }
-
-  res.status(200).json(card);
+  res.status(200).json({
+    success: true,
+    data: card
+  });
 });
 
 module.exports = {

@@ -2,31 +2,31 @@ const Card = require('../models/card');
 const Activity = require('../models/activity');
 const getPagination = require('../utils/pagination');
 const redis = require('../config/redis');
+const { NotFoundError } = require('../utils/errors');
 
-async function clearBoardCache(boardId){
+async function clearBoardCache(boardId) {
   const keys = await redis.keys(`board:${boardId}:cards:*`);
-  if(keys.length) await redis.del(...keys);
+  if (keys.length) await redis.del(...keys);
 }
 
 async function createCard({ boardId, title, description, userId }) {
-  console.log("CREATE CARD INPUT:", boardId, userId);
   const card = await Card.create({
     boardId,
     title,
     description,
-    createdBy:userId
+    createdBy: userId
   });
 
   await clearBoardCache(boardId);
 
   await Activity.create({
     boardId,
-    action:'CARD_CREATED',
-    performedBy:userId,
-    meta:{ title }
+    action: 'CARD_CREATED',
+    performedBy: userId,
+    meta: { title }
   });
 
-  global.io.to(boardId).emit("card:created", card);
+  // Socket emission handled by controller to avoid duplicates
 
   return card;
 }
@@ -52,42 +52,50 @@ async function getCards(boardId, page = 1, limit = 10) {
   return cards;
 }
 
-async function getCardById(cardId){
-  return Card.findById(cardId);
+async function getCardById(cardId) {
+  const card = await Card.findById(cardId);
+  
+  if (!card) {
+    throw new NotFoundError('Card not found');
+  }
+  
+  return card;
 }
 
-async function updateCard(boardId,cardId,data,userId){
-
+async function updateCard(boardId, cardId, data, userId) {
   const card = await Card.findOneAndUpdate(
-    { _id:cardId, boardId },
-    { $set:data },
-    { new:true }
+    { _id: cardId, boardId },
+    { $set: data },
+    { new: true }
   );
 
-  if(!card) throw new Error("Card not found");
+  if (!card) {
+    throw new NotFoundError('Card not found');
+  }
 
   await clearBoardCache(boardId);
 
   await Activity.create({
     boardId,
-    action:"CARD_UPDATED",
-    performedBy:userId,
-    meta:{ updatedFields:Object.keys(data) }
+    action: "CARD_UPDATED",
+    performedBy: userId,
+    meta: { updatedFields: Object.keys(data) }
   });
 
-  global.io.to(boardId).emit("card:updated", card);
+  // Socket emission handled by controller to avoid duplicates
 
   return card;
 }
 
 async function deleteCard({ boardId, cardId, userId }) {
-
   const card = await Card.findOneAndDelete({
     _id: cardId,
     boardId
   });
 
-  if (!card) throw new Error("Card not found");
+  if (!card) {
+    throw new NotFoundError('Card not found');
+  }
 
   await clearBoardCache(boardId);
 
@@ -98,7 +106,7 @@ async function deleteCard({ boardId, cardId, userId }) {
     meta: { title: card.title }
   });
 
-  global.io.to(boardId).emit("card:deleted", { cardId, boardId });
+  // Socket emission handled by controller to avoid duplicates
 
   return card;
 }

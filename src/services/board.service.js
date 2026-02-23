@@ -3,10 +3,9 @@ const Activity = require('../models/activity');
 const User = require('../models/user');
 const redis = require('../config/redis');
 const getPagination = require('../utils/pagination');
-
+const { NotFoundError, ConflictError } = require('../utils/errors');
 
 async function createBoard({ name, ownerId }) {
-
   const board = await Board.create({
     name,
     ownerId,
@@ -27,7 +26,10 @@ async function createBoard({ name, ownerId }) {
 
 async function deleteBoard({ boardId, performedBy }) {
   const board = await Board.findById(boardId);
-  if (!board) throw new Error('Board not found');
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
 
   await Board.findByIdAndDelete(boardId);
 
@@ -45,16 +47,24 @@ async function deleteBoard({ boardId, performedBy }) {
 
 async function addMember({ boardId, email, role, performedBy }) {
   const user = await User.findOne({ email });
-  if (!user) throw new Error('User not found');
+  
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
 
   const board = await Board.findById(boardId);
-  if (!board) throw new Error('Board not found');
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
 
   const exists = board.members.find(
     m => m.userId.toString() === user._id.toString()
   );
 
-  if (exists) throw new Error('User already a member');
+  if (exists) {
+    throw new ConflictError('User already a member');
+  }
 
   board.members.push({ userId: user._id, role });
   await board.save();
@@ -73,13 +83,18 @@ async function addMember({ boardId, email, role, performedBy }) {
 
 async function updateMemberRole({ boardId, userId, role, performedBy }) {
   const board = await Board.findById(boardId);
-  if (!board) throw new Error('Board not found');
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
 
   const member = board.members.find(
     m => m.userId.toString() === userId.toString()
   );
 
-  if (!member) throw new Error('Member not found');
+  if (!member) {
+    throw new NotFoundError('Member not found');
+  }
 
   member.role = role;
   await board.save();
@@ -96,7 +111,10 @@ async function updateMemberRole({ boardId, userId, role, performedBy }) {
 
 async function removeMember({ boardId, userId, performedBy }) {
   const board = await Board.findById(boardId);
-  if (!board) throw new Error('Board not found');
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
 
   const before = board.members.length;
 
@@ -104,8 +122,9 @@ async function removeMember({ boardId, userId, performedBy }) {
     m => m.userId.toString() !== userId.toString()
   );
 
-  if (before === board.members.length)
-    throw new Error('Member not found');
+  if (before === board.members.length) {
+    throw new NotFoundError('Member not found');
+  }
 
   await board.save();
 
@@ -122,12 +141,21 @@ async function removeMember({ boardId, userId, performedBy }) {
 }
 
 async function getBoardById(boardId) {
-  return Board.findById(boardId);
+  const board = await Board.findById(boardId);
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
+  
+  return board;
 }
 
 async function updateBoard(boardId, data, performedBy) {
   const board = await Board.findByIdAndUpdate(boardId, data, { new: true });
-  if (!board) throw new Error('Board not found');
+  
+  if (!board) {
+    throw new NotFoundError('Board not found');
+  }
 
   await redis.del(`user:${board.ownerId}:boards`);
 
@@ -145,12 +173,19 @@ async function getUserBoards(userId, page = 1, limit = 10) {
   const cacheKey = `user:${userId}:boards:${page}:${limit}`;
 
   const cached = await redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
+  
+  if (cached) {
+    return JSON.parse(cached);
+  }
 
   const { skip } = getPagination(page, limit);
 
+  // Find boards where user is either the owner OR a member
   const boards = await Board.find({
-    "members.userId": userId
+    $or: [
+      { ownerId: userId },
+      { "members.userId": userId }
+    ]
   })
     .limit(limit)
     .skip(skip)

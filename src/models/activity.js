@@ -13,13 +13,13 @@ const activitySchema = new mongoose.Schema({
     meta : Object
 }, {timestamps : true});
 
-// board activity feed fast
+// Index for fast board activity feed
 activitySchema.index({ boardId: 1 });
 
-// latest activity first
+// Index for sorting by latest activity
 activitySchema.index({ createdAt: -1 });
 
-// user activity queries (future)
+// Index for user activity queries (future)
 activitySchema.index({ performedBy: 1 });
 
 module.exports = mongoose.model('Activity', activitySchema);

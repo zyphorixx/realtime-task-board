@@ -1,47 +1,63 @@
 const Board = require('../models/board');
+const logger = require('../utils/logger');
 
 function hasRole(allowedRoles = []) {
   
-  // Ye middleware return karta hai ek function
+  // This middleware returns a function
   return async function (req, res, next) {
     try {
-      const userId = req.user.id; // JWT se aaya hua user
+      const userId = req.user.id; // User from JWT
       const boardId = req.params.boardId || req.body.boardId;
       
-      // Board exist karta hai ya nahi
+      // Check if boardId is valid
+      if (!boardId) {
+        return res.status(400).json({ message: 'Board ID is required' });
+      }
+      
+      // Check if board exists
       const board = await Board.findById(boardId);
       if (!board) {
         return res.status(404).json({ message: 'Board not found' });
       }
 
-      // Check karo user board ka member hai ya nahi
+      // Check if user is board owner (via ownerId field)
+      const isOwner = board.ownerId && board.ownerId.equals(req.user.id);
+      
+      // Check if user is in members array
       const member = board.members.find(
         m => m.userId.equals(req.user.id)
       );
 
-      if (!member) {
+      // User must be either owner OR a member
+      if (!isOwner && !member) {
         return res.status(403).json({ message: 'You are not a board member' });
       }
 
-      console.log('RBAC CHECK:', {
+      // Determine user's role: OWNER takes precedence
+      const userRole = isOwner ? 'OWNER' : member.role;
+
+      logger.debug('RBAC CHECK:', {
         userId,
         boardId,
-        role: member.role,
+        isOwner,
+        role: userRole,
         allowedRoles
       });
       
-      // Role allowed hai ya nahi
-      if (!allowedRoles.includes(member.role)) {
+      // Check if role is allowed
+      if (!allowedRoles.includes(userRole)) {
         return res.status(403).json({ message: 'Insufficient permissions' });
       }
 
-      // Board ko request me attach kar diya 
+      // Attach board and user role to request
       req.board = board;
+      req.userRole = userRole;
 
-      // Sab sahi → controller ko jaane do
+      // All good → proceed to controller
       next();
 
     } catch (error) {
+      logger.error('Role validation failed:', error.message);
       return res.status(500).json({ message: 'Role validation failed' });
     }
   };

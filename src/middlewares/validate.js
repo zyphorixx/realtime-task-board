@@ -1,19 +1,19 @@
-// This middleware will validate the request body
+// This middleware validates the request body against a Joi schema
 function validate(schema){
 
     return (req, res, next) => {
 
         const { error } = schema.validate(req.body);
 
-        // agar validation fail hui
+        // If validation fails, return error response
         if(error){
-            return res.status(201).json({
+            return res.status(400).json({
                 success : false,
                 message : error.details[0].message
             });
         }
 
-        // sab sahi -> controller pr jao
+        // Validation passed, proceed to controller
         next();
     }
 }

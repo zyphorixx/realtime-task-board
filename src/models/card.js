@@ -23,7 +23,7 @@ const cardSchema = new mongoose.Schema({
   },
 
   position: {
-    type: Number, // ordering ke liye
+    type: Number, // For ordering cards
     default: 0
   },
 
@@ -34,13 +34,13 @@ const cardSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// board ke cards fast fetch honge
+// Index for fast board cards fetch
 cardSchema.index({ boardId: 1 });
 
-// ordering fast hogi
+// Index for fast ordering
 cardSchema.index({ position: 1 });
 
-// status filter fast hoga (future feature)
+// Index for fast status filter (future feature)
 cardSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Card', cardSchema);
